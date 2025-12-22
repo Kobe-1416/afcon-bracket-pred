@@ -1,3 +1,6 @@
+# afcon-bracket-pred
+An AFCON 2025 tournament predictor built to help content creators and fans make clean, shareable bracket predictions.
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
