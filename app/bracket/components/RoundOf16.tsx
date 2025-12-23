@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { db } from '../../../lib/firebase';
+import { doc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
+import { saveStagePrediction, getRoundPercentages } from '../../../lib/predictions';
+
+
 
 const countryCodes: Record<string, string> = {
   'Morocco': 'ma',
@@ -68,17 +73,21 @@ type VoteableButtonProps = {
   team: string;
   matchId: string;
   selected: boolean;
-  votes: number;
-  totalVotes: number;
+  percentage: number;
   onVote: (matchId: string, team: string) => void;
 };
 
-function VoteableButton({ team, matchId, selected, votes, totalVotes, onVote }: VoteableButtonProps) {
-  const percentage = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
-
+function VoteableButton({ team, matchId, selected, votes, userCount, onVote }: {
+  team: string;
+  matchId: string;
+  selected: boolean;
+  votes: number;
+  userCount: number;
+  onVote: (matchId: string, team: string) => void;
+}) {
+  const percentage = userCount > 0 ? Math.round((votes / userCount) * 100) : 0;
   return (
-    <button
-      onClick={() => onVote(matchId, team)}
+    <button onClick={() => onVote(matchId, team)}
       style={{
         padding: '0.5rem 1rem',
         display: 'flex',
@@ -101,6 +110,7 @@ function VoteableButton({ team, matchId, selected, votes, totalVotes, onVote }: 
   );
 }
 
+
 export default function RO16({ top2, thirdPlace, onAdvance }: RO16Props) {
   const [matches] = useState<RO16Match[]>(generateRO16Matches(top2, thirdPlace));
   const [winners, setWinners] = useState<Record<string, string>>({});
@@ -112,6 +122,8 @@ export default function RO16({ top2, thirdPlace, onAdvance }: RO16Props) {
     return initVotes;
   });
 
+  const roundPercentages = getRoundPercentages(votes);
+
   const toggleWinner = (matchId: string, team: string) => {
     setWinners({ ...winners, [matchId]: team });
     setVotes({
@@ -120,15 +132,26 @@ export default function RO16({ top2, thirdPlace, onAdvance }: RO16Props) {
     });
   };
 
-  const handleNext = () => {
-    const allSelected = matches.every((m) => Boolean(winners[m.id]));
-    if (!allSelected) {
-      alert('Please select a winner for all matches!');
-      return;
-    }
-    const orderedWinners = matches.map((m) => winners[m.id] as string);
-    onAdvance(orderedWinners);
-  };
+  const handleNext = async () => {
+  const allSelected = matches.every((m) => Boolean(winners[m.id]));
+  if (!allSelected) {
+    alert('Please select a winner for all matches!');
+    return;
+  }
+
+  const orderedWinners = matches.map((m) => winners[m.id] as string);
+
+  // Save to Firestore
+  try {
+    await saveStagePrediction('ro16', winners); // <--- ADD THIS
+    console.log('Predictions saved successfully.');
+  } catch (err) {
+    console.error('Error saving predictions:', err);
+  }
+
+  // Advance to next stage in your app
+  onAdvance(orderedWinners);
+};
 
   return (
     <div
@@ -170,7 +193,7 @@ export default function RO16({ top2, thirdPlace, onAdvance }: RO16Props) {
                     matchId={m.id}
                     selected={winners[m.id] === team}
                     votes={votes[m.id][team]}
-                    totalVotes={totalVotes}
+                    userCount={Object.values(votes[m.id]).reduce((a, b) => a + b, 0)}
                     onVote={toggleWinner}
                   />
                 ))}
