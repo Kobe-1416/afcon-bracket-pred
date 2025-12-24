@@ -1,100 +1,56 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../../lib/firebase';
-import { doc, getDoc, runTransaction } from 'firebase/firestore';
 
 type VotesMap = Record<string, Record<string, number>>;
-type UserVotesMap = Record<string, string>;
 
-type VotesContextValue = {
-  vote: (matchId: string, team: string, stage: string) => Promise<void>;
+type VotesContextType = {
+  votes: VotesMap;
   getPercent: (matchId: string, team: string) => number;
-  hasVoted: (matchId: string) => boolean;
-  userVotedTeam: (matchId: string) => string | undefined;
-  rawVotes: VotesMap;
+  refresh: () => Promise<void>;
 };
 
-const STORAGE_KEY = 'afcon_votes_user_v2';
+const VotesContext = createContext<VotesContextType | null>(null);
 
-const VotesContext = createContext<VotesContextValue | null>(null);
-
-export const VotesProvider: React.FC<React.PropsWithChildren<{}>> = ({ children }) => {
+export function VotesProvider({
+  stage,
+  children,
+}: {
+  stage: 'ro16' | 'qf' | 'sf' | 'final';
+  children: React.ReactNode;
+}) {
   const [votes, setVotes] = useState<VotesMap>({});
-  const [userVotes, setUserVotes] = useState<UserVotesMap>(() => {
-    try {
-      const raw = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
+
+  const fetchVotes = async () => {
+    const ref = doc(db, 'predictions', stage);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+      setVotes(snap.data() as VotesMap);
+    } else {
+      setVotes({});
     }
-  });
+  };
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(userVotes));
-  }, [userVotes]);
-
-  // Fetch votes from Firebase for the stage (optional: you can fetch all stages if needed)
-  const fetchVotes = async (stage: string) => {
-    try {
-      const docRef = doc(db, 'predictions', stage);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        setVotes(prev => ({ ...prev, ...{ [stage]: snap.data() as VotesMap[string] } }));
-      }
-    } catch (err) {
-      console.error('Error fetching votes:', err);
-    }
-  };
-
-  const vote = async (matchId: string, team: string, stage: string) => {
-    if (userVotes[matchId]) return; // already voted locally
-
-    try {
-      const docRef = doc(db, 'predictions', stage);
-      await runTransaction(db, async (transaction) => {
-        const docSnap = await transaction.get(docRef);
-        let data: Record<string, Record<string, number>> = {};
-        if (docSnap.exists()) {
-          data = docSnap.data() as Record<string, Record<string, number>>;
-        }
-        if (!data[matchId]) data[matchId] = {};
-        data[matchId][team] = (data[matchId][team] || 0) + 1;
-        transaction.set(docRef, data);
-      });
-
-      setUserVotes(prev => ({ ...prev, [matchId]: team }));
-      await fetchVotes(stage); // update percentages from database
-    } catch (err) {
-      console.error('Error saving vote:', err);
-    }
-  };
+    fetchVotes();
+  }, [stage]);
 
   const getPercent = (matchId: string, team: string) => {
-    const stageVotes = Object.values(votes);
-    let total = 0;
-    let teamVotes = 0;
-
-    stageVotes.forEach(stage => {
-      if (!stage[matchId]) return;
-      Object.entries(stage[matchId]).forEach(([t, count]) => {
-        total += count;
-        if (t === team) teamVotes = count;
-      });
-    });
-
-    return total > 0 ? Math.round((teamVotes / total) * 100) : 0;
+    const match = votes[matchId];
+    if (!match) return 0;
+    const total = Object.values(match).reduce((a, b) => a + b, 0);
+    if (total === 0) return 0;
+    return Math.round(((match[team] || 0) / total) * 100);
   };
 
-  const hasVoted = (matchId: string) => !!userVotes[matchId];
-  const userVotedTeam = (matchId: string) => userVotes[matchId];
-
   return (
-    <VotesContext.Provider value={{ vote, getPercent, hasVoted, userVotedTeam, rawVotes: votes }}>
+    <VotesContext.Provider value={{ votes, getPercent, refresh: fetchVotes }}>
       {children}
     </VotesContext.Provider>
   );
-};
+}
 
 export function useVotes() {
   const ctx = useContext(VotesContext);

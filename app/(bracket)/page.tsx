@@ -8,7 +8,7 @@ import QuarterFinal from '../components/QuarterFinal';
 import SemiFinal from '../components/SemiFinal';
 import Final from '../components/Final';
 import BracketView from '../components/BracketView';
-import { VotesProvider } from '../components/VotesProvider';
+import VotesProviderWrapper from '../components/VotesProviderWrapper';
 
 type Group = { name: string; teams: string[] };
 
@@ -27,9 +27,7 @@ export default function BracketPage() {
   const [ro16Winners, setRo16Winners] = useState<string[] | null>(null);
   const [qfWinners, setQfWinners] = useState<string[] | null>(null);
   const [sfWinners, setSfWinners] = useState<string[] | null>(null);
-
   const [champion, setChampion] = useState<string | null>(null);
-
   const [showBracket, setShowBracket] = useState(false);
 
   // -------- Groups --------
@@ -66,7 +64,6 @@ export default function BracketPage() {
   const handleFinalChampion = (winner: string) => {
     setChampion(winner);
     setShowBracket(true);
-    // keep sfWinners intact so final teams still render
     alert(`🏆 Champion of AFCON 2025: ${winner}`);
   };
 
@@ -91,70 +88,76 @@ export default function BracketPage() {
       ]
     : [];
 
-  // finalMatch should always be the two finalists coming from SF winners,
-  // and we keep it independent from champion state.
-  const finalMatch = sfWinners && sfWinners.length === 2
-    ? { team1: sfWinners[0], team2: sfWinners[1] }
-    : null;
+  const finalMatch =
+    sfWinners && sfWinners.length === 2
+      ? { team1: sfWinners[0], team2: sfWinners[1] }
+      : null;
 
   const showBracketNow = stage === 'final' || showBracket;
 
   // -------- Render --------
   return (
-    <VotesProvider>
-    <div style={{ padding: '2rem' }}>
-      <h1 style={{ fontSize: '2rem', paddingLeft: '1.75rem' }}>
-        AFCON 2025 Bracket Predictor
-      </h1>
+    // Ensure stage is valid for VotesProviderWrapper
+    <VotesProviderWrapper
+      stage={
+        stage === 'ro16' || stage === 'qf' || stage === 'sf' || stage === 'final'
+          ? stage
+          : 'ro16'
+      }
+    >
+      <div style={{ padding: '2rem' }}>
+        <h1 style={{ fontSize: '2rem', paddingLeft: '1.75rem' }}>
+          AFCON 2025 Bracket Predictor
+        </h1>
 
-      {/* Render current stage */}
-      {stage === 'group' && (
-        <GroupStage groups={groups} onAdvance={handleGroupAdvance} />
-      )}
+        {/* Render current stage */}
+        {stage === 'group' && (
+          <GroupStage groups={groups} onAdvance={handleGroupAdvance} />
+        )}
 
-      {stage === 'ro16' && groupSelections && (
-        <RO16
-          top2={groupSelections.top2}
-          thirdPlace={groupSelections.thirdPlace}
-          onAdvance={handleRO16Advance}
-        />
-      )}
-
-      {stage === 'qf' && ro16Winners && (
-        <QuarterFinal winners={ro16Winners} onAdvance={handleQFAdvance} />
-      )}
-
-      {stage === 'sf' && qfWinners && (
-        <SemiFinal winners={qfWinners} onAdvance={handleSFAdvance} />
-      )}
-
-      {stage === 'final' && sfWinners && (
-        <Final finalists={sfWinners} onAdvance={handleFinalChampion} />
-      )}
-
-      {/* Show bracket (always pass finalMatch teams, and the champion separately) */}
-      {showBracketNow && (
-        <div style={{ marginTop: '3rem' }}>
-          <h2
-            style={{
-              textAlign: 'center',
-              marginBottom: '1.5rem',
-              fontWeight: 600,
-            }}
-          >
-            Tournament Bracket
-          </h2>
-
-          <BracketView
-            ro16Matches={ro16Matches}
-            qfMatches={qfMatches}
-            sfMatches={sfMatchesData}
-            finalMatch={finalMatch}   // finalists (always pass the teams)
-            champion={champion}      // champion (optional)
+        {stage === 'ro16' && groupSelections && (
+          <RO16
+            top2={groupSelections.top2}
+            thirdPlace={groupSelections.thirdPlace}
+            onAdvance={handleRO16Advance}
           />
-        </div>
-      )}
-    </div>
-    </VotesProvider>
+        )}
+
+        {stage === 'qf' && ro16Winners && (
+          <QuarterFinal winners={ro16Winners} onAdvance={handleQFAdvance} />
+        )}
+
+        {stage === 'sf' && qfWinners && (
+          <SemiFinal winners={qfWinners} onAdvance={handleSFAdvance} />
+        )}
+
+        {stage === 'final' && sfWinners?.length === 2 && (
+          <Final finalists={sfWinners} onAdvance={handleFinalChampion} />
+        )}
+
+        {/* Show bracket (always pass finalMatch teams, and the champion separately) */}
+        {showBracketNow && (
+          <div style={{ marginTop: '3rem' }}>
+            <h2
+              style={{
+                textAlign: 'center',
+                marginBottom: '1.5rem',
+                fontWeight: 600,
+              }}
+            >
+              Tournament Bracket
+            </h2>
+
+            <BracketView
+              ro16Matches={ro16Matches}
+              qfMatches={qfMatches}
+              sfMatches={sfMatchesData}
+              finalMatch={finalMatch}
+              champion={champion}
+            />
+          </div>
+        )}
+      </div>
+    </VotesProviderWrapper>
   );
 }
