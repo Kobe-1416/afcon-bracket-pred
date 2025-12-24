@@ -95,6 +95,7 @@ export default function GroupStage({ groups, onAdvance }: Props) {
                   fontSize: '0.85rem',
                   fontWeight: '600',
                   opacity: 0.85,
+                  color: "#000000ff",
                   marginBottom: '0.75rem',
                 }}
               >
