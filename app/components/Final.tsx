@@ -35,6 +35,7 @@ function VoteableButton({ team, selected, percentage, onVote }: VoteableButtonPr
         width: '100%',
         marginBottom: '0.5rem',
         alignItems: 'center',
+        color: "#000000ff",
         gap: '0.5rem',
         border: selected ? '2px solid #006400' : '1px solid #ccc',
         borderRadius: '4px',

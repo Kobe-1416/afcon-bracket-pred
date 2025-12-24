@@ -167,6 +167,7 @@ export default function GroupStage({ groups, onAdvance }: Props) {
               style={{
                 padding: '0.5rem 1rem',
                 display: 'flex',
+                color: "#000000ff",
                 borderRadius: '4px',
                 border: isSelected ? '2px solid #FFD700' : '1px solid #ccc',
                 backgroundColor: isSelected ? '#FFA07A' : '#FFE4E1',

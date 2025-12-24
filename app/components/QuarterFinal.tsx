@@ -47,6 +47,7 @@ function VoteableButton({ team, matchId, selected, votes, userCount, onVote }: {
         padding: '0.5rem 1rem',
         display: 'flex',
         width: '100%',
+        color: "#000000ff",
         marginBottom: '0.5rem',
         alignItems: 'center',
         gap: '0.5rem',
