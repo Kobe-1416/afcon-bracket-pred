@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 
-import GroupStage from './components/GroupStage';
-import RO16, { generateRO16Matches } from './components/RoundOf16';
-import QuarterFinal from './components/QuarterFinal';
-import SemiFinal from './components/SemiFinal';
-import Final from './components/Final';
-import BracketView from './components/BracketView';
-import { VotesProvider } from './components/VotesProvider';
+import GroupStage from '../components/GroupStage';
+import RO16, { generateRO16Matches } from '../components/RoundOf16';
+import QuarterFinal from '../components/QuarterFinal';
+import SemiFinal from '../components/SemiFinal';
+import Final from '../components/Final';
+import BracketView from '../components/BracketView';
+import { VotesProvider } from '../components/VotesProvider';
 
 type Group = { name: string; teams: string[] };
 

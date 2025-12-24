@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { saveStagePrediction } from '../../../lib/predictions';
+import { saveStagePrediction } from '../../lib/predictions';
 
 const countryCodes: Record<string, string> = {
   Morocco: 'ma', Mali: 'ml', Zambia: 'zm', Comoros: 'km',
@@ -14,12 +14,14 @@ const countryCodes: Record<string, string> = {
 };
 
 type Match = { id: string; team1: string; team2: string };
-type Props = { winners: string[]; onAdvance: (sfWinners: string[]) => void };
+type Props = { winners: string[]; onAdvance: (qfWinners: string[]) => void };
 
-function generateSemiMatches(winners: string[]): Match[] {
+function generateQuarterMatches(winners: string[]): Match[] {
   return [
-    { id: 'SF Match 1', team1: winners[0], team2: winners[1] },
-    { id: 'SF Match 2', team1: winners[2], team2: winners[3] },
+    { id: 'QF Match 1', team1: winners[0], team2: winners[1] },
+    { id: 'QF Match 2', team1: winners[2], team2: winners[3] },
+    { id: 'QF Match 3', team1: winners[4], team2: winners[5] },
+    { id: 'QF Match 4', team1: winners[6], team2: winners[7] },
   ];
 }
 
@@ -48,6 +50,7 @@ function VoteableButton({ team, matchId, selected, votes, userCount, onVote }: {
         marginBottom: '0.5rem',
         alignItems: 'center',
         gap: '0.5rem',
+        
         border: selected ? '2px solid #006400' : '1px solid #ccc',
         borderRadius: '4px',
         backgroundColor: selected ? '#90EE90' : '#F0FFF0',
@@ -65,9 +68,9 @@ function VoteableButton({ team, matchId, selected, votes, userCount, onVote }: {
   );
 }
 
-export default function SemiFinal({ winners, onAdvance }: Props) {
-  const [matches] = useState(generateSemiMatches(winners));
-  const [sfWinners, setSfWinners] = useState<Record<string, string>>({});
+export default function QuarterFinal({ winners, onAdvance }: Props) {
+  const [matches] = useState(generateQuarterMatches(winners));
+  const [qfWinners, setQfWinners] = useState<Record<string, string>>({});
   const [votes, setVotes] = useState<Record<string, Record<string, number>>>(() => {
     const init: Record<string, Record<string, number>> = {};
     matches.forEach(m => {
@@ -77,7 +80,7 @@ export default function SemiFinal({ winners, onAdvance }: Props) {
   });
 
   const toggleWinner = (matchId: string, team: string) => {
-    setSfWinners(prev => ({ ...prev, [matchId]: team }));
+    setQfWinners(prev => ({ ...prev, [matchId]: team }));
     setVotes(prev => ({
       ...prev,
       [matchId]: {
@@ -88,15 +91,15 @@ export default function SemiFinal({ winners, onAdvance }: Props) {
   };
 
   const handleNext = async () => {
-    if (!matches.every(m => sfWinners[m.id])) return alert('Select a winner for all matches!');
-    const orderedWinners = matches.map(m => sfWinners[m.id]);
-    await saveStagePrediction('sf', sfWinners);
+    if (!matches.every(m => qfWinners[m.id])) return alert('Select a winner for all matches!');
+    const orderedWinners = matches.map(m => qfWinners[m.id]);
+    await saveStagePrediction('qf', qfWinners);
     onAdvance(orderedWinners);
   };
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>Semi Finals</h1>
+      <h1>Quarter Finals</h1>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem' }}>
         {matches.map(m => {
@@ -111,14 +114,14 @@ export default function SemiFinal({ winners, onAdvance }: Props) {
 
           return (
             <div key={m.id} style={{ backgroundColor: '#8B0000', padding: '1rem', borderRadius: '8px' }}>
-              <h3 style={{ textAlign: 'center', color: '#fff' }}>{m.id}</h3>
+              <h3 style={{ textAlign: 'center', marginBottom: '1rem' }}>{m.id}</h3>
 
               {[m.team1, m.team2].map(team => (
                 <VoteableButton
                     key={team}
                     team={team}
                     matchId={m.id}
-                    selected={sfWinners[m.id] === team}
+                    selected={qfWinners[m.id] === team}
                     votes={votes[m.id][team]}
                     userCount={Object.values(votes[m.id]).reduce((a, b) => a + b, 0)}
                     onVote={toggleWinner}
@@ -138,8 +141,8 @@ export default function SemiFinal({ winners, onAdvance }: Props) {
             color: '#8B0000',
             border: 'none',
             borderRadius: '4px',
-            fontWeight: 'bold',
             cursor: 'pointer',
+            fontWeight: 'bold',
           }}
         >
           Next Round

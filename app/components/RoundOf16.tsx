@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { db } from '../../../lib/firebase';
+import { db } from '../../lib/firebase';
 import { doc, setDoc, updateDoc, getDoc } from 'firebase/firestore';
-import { saveStagePrediction, getRoundPercentages } from '../../../lib/predictions';
+import { saveStagePrediction, getRoundPercentages } from '../../lib/predictions';
 
 
 

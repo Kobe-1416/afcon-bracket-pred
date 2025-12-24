@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { saveStagePrediction } from '../../../lib/predictions';
+import { saveStagePrediction } from '../../lib/predictions';
 
 const countryCodes: Record<string, string> = {
   Morocco: 'ma', Mali: 'ml', Zambia: 'zm', Comoros: 'km',
