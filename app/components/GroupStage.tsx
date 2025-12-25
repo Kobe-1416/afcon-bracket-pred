@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+/* minimal country code map used for flag icons */
 const countryCodes: Record<string, string> = {
   Morocco: 'ma', Mali: 'ml', Zambia: 'zm', Comoros: 'km',
   Egypt: 'eg', 'South Africa': 'za', Angola: 'ao', Zimbabwe: 'zw',
@@ -11,20 +12,31 @@ const countryCodes: Record<string, string> = {
   'Ivory Coast': 'ci', Cameroon: 'cm', Gabon: 'ga', Mozambique: 'mz',
 };
 
+/* Types */
 type Group = {
   name: string;
   teams: string[];
 };
 
+/* store third-place as an object with team and its originating group */
+type ThirdPlaceEntry = {
+  team: string;
+  group: string;
+};
+
 type Props = {
   groups: Group[];
-  onAdvance: (selected: { top2: Record<string, string[]>; thirdPlace: string[] }) => void;
+  /* onAdvance now receives thirdPlace entries including the group they came from */
+  onAdvance: (selected: { top2: Record<string, string[]>; thirdPlace: ThirdPlaceEntry[] }) => void;
 };
 
 export default function GroupStage({ groups, onAdvance }: Props) {
+  /* top-two selections per group: same as before */
   const [selected, setSelected] = useState<Record<string, string[]>>({});
-  const [thirdPlace, setThirdPlace] = useState<string[]>([]);
+  /* thirdPlace now stores objects with team + group */
+  const [thirdPlace, setThirdPlace] = useState<ThirdPlaceEntry[]>([]);
 
+  /* toggleTeam: select winner/runner-up for a group (unchanged logic) */
   const toggleTeam = (groupName: string, team: string) => {
     const groupSelected = selected[groupName] || [];
 
@@ -39,24 +51,34 @@ export default function GroupStage({ groups, onAdvance }: Props) {
     setSelected({ ...selected, [groupName]: updated });
   };
 
+  /* toggleThird: add/remove third-place entry, but keep the group it belongs to */
   const toggleThird = (team: string) => {
-    let updated: string[];
-    if (thirdPlace.includes(team)) {
-      updated = thirdPlace.filter((t) => t !== team);
+    const existingIndex = thirdPlace.findIndex((t) => t.team === team);
+
+    if (existingIndex !== -1) {
+      // remove if already selected
+      const updated = thirdPlace.filter((t) => t.team !== team);
+      setThirdPlace(updated);
     } else {
-      if (thirdPlace.length >= 4) return;
-      updated = [...thirdPlace, team];
+      // find the group the team belongs to
+      const groupObj = groups.find((g) => g.teams.includes(team));
+      const groupName = groupObj ? groupObj.name : '';
+
+      if (thirdPlace.length >= 4) return; // limit to 4
+      setThirdPlace([...thirdPlace, { team, group: groupName }]);
     }
-    setThirdPlace(updated);
   };
 
+  /* proceed to next round: validate and pass selected data upward */
   const handleNext = () => {
     const allValid = groups.every((g) => (selected[g.name] || []).length === 2);
     if (!allValid) return alert('Select 2 teams for each group.');
     if (thirdPlace.length !== 4) return alert('Select exactly 4 third-place teams.');
+
     onAdvance({ top2: selected, thirdPlace });
   };
 
+  /* derive list of teams not chosen in top2 selections */
   const allTeams = groups.flatMap((g) => g.teams);
   const unselectedTeams = allTeams.filter(
     (team) => !Object.values(selected).flat().includes(team)
@@ -70,7 +92,6 @@ export default function GroupStage({ groups, onAdvance }: Props) {
           gridTemplateColumns: 'repeat(2, 1fr)',
           gap: '3rem',
           marginBottom: '3rem',
-          
         }}
       >
         {groups.map((group) => {
@@ -85,20 +106,23 @@ export default function GroupStage({ groups, onAdvance }: Props) {
                 borderRadius: '8px',
               }}
             >
-              <h2 style={{ textAlign: 'center',fontSize: '1.45rem',
-                  fontWeight: '600', color: '#FFD700' }}>Group {group.name}</h2>
+              <h2 style={{
+                textAlign: 'center',
+                fontSize: '1.45rem',
+                fontWeight: '600',
+                color: '#FFD700'
+              }}>
+                Group {group.name}
+              </h2>
 
               {/* UX helper text */}
-              <p
-                style={{
-                  textAlign: 'center',
-                  fontSize: '0.85rem',
-                  fontWeight: '600',
-                  opacity: 0.85,
-                  
-                  marginBottom: '0.75rem',
-                }}
-              >
+              <p style={{
+                textAlign: 'center',
+                fontSize: '0.85rem',
+                fontWeight: '600',
+                opacity: 0.85,
+                marginBottom: '0.75rem',
+              }}>
                 🥇 First click = Group Winner<br />
                 🥈 Second click = Runner-up
               </p>
@@ -126,13 +150,13 @@ export default function GroupStage({ groups, onAdvance }: Props) {
                         border: isWinner
                           ? '2px solid #FFD700'
                           : isRunnerUp
-                          ? '2px solid #006400'
-                          : '1px solid #ccc',
+                            ? '2px solid #006400'
+                            : '1px solid #ccc',
                         backgroundColor: isWinner
                           ? '#FFF5CC'
                           : isRunnerUp
-                          ? '#90EE90'
-                          : '#F0FFF0',
+                            ? '#90EE90'
+                            : '#F0FFF0',
                       }}
                     >
                       <img
@@ -155,11 +179,11 @@ export default function GroupStage({ groups, onAdvance }: Props) {
         })}
       </div>
 
-      {/* Third place unchanged */}
+      {/* Third place selection: now stores team + originating group */}
       <h2 style={{ textAlign: 'center' }}>Best Third-Place Countries</h2>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', justifyContent: 'center' }}>
         {unselectedTeams.map((team) => {
-          const isSelected = thirdPlace.includes(team);
+          const isSelected = thirdPlace.some((t) => t.team === team);
           return (
             <button
               key={team}
@@ -167,6 +191,8 @@ export default function GroupStage({ groups, onAdvance }: Props) {
               style={{
                 padding: '0.5rem 1rem',
                 display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
                 color: "#000000ff",
                 borderRadius: '4px',
                 border: isSelected ? '2px solid #FFD700' : '1px solid #ccc',
@@ -175,13 +201,24 @@ export default function GroupStage({ groups, onAdvance }: Props) {
               }}
             >
               <img
-                        style={{ marginRight: '0.5rem' }}
-                        src={`/flags/${countryCodes[team]}.svg`}
-                        alt={team}
-                        width={24}
-                        height={24}
-                      />
-              {team}
+                style={{ marginRight: '0.5rem' }}
+                src={`/flags/${countryCodes[team]}.svg`}
+                alt={team}
+                width={24}
+                height={24}
+              />
+              <span>{team}</span>
+
+              {/* small hint (optional): show group when selected */}
+              {isSelected && (
+                <span style={{ marginLeft: '0.5rem', fontSize: '0.85rem', opacity: 0.9 }}>
+                  {/* find the associated group to display */}
+                  {(() => {
+                    const entry = thirdPlace.find((t) => t.team === team);
+                    return entry ? `(${entry.group})` : '';
+                  })()}
+                </span>
+              )}
             </button>
           );
         })}

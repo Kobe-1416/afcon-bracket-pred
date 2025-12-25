@@ -12,17 +12,29 @@ import VotesProviderWrapper from '../components/VotesProviderWrapper';
 
 type Group = { name: string; teams: string[] };
 
-// Payload returned by GroupStage.onAdvance
+/**
+ * Third-place entry now includes originating group
+ * (matches updated GroupStage + RO16 expectations)
+ */
+type ThirdPlaceEntry = {
+  team: string;
+  group: string;
+};
+
+/**
+ * Payload returned by GroupStage.onAdvance
+ * (UPDATED thirdPlace type)
+ */
 type GroupAdvancePayload = {
-  top2: Record<string, string[]>; // e.g. { A: ['Morocco','Mali'], B: ['Egypt','RSA'], ... }
-  thirdPlace: string[];           // length 4
+  top2: Record<string, string[]>;
+  thirdPlace: ThirdPlaceEntry[];
 };
 
 export default function BracketPage() {
   // -------- Stage control --------
   const [stage, setStage] = useState<'group' | 'ro16' | 'qf' | 'sf' | 'final'>('group');
 
-  // -------- Tournament state (typed) --------
+  // -------- Tournament state --------
   const [groupSelections, setGroupSelections] = useState<GroupAdvancePayload | null>(null);
   const [ro16Winners, setRo16Winners] = useState<string[] | null>(null);
   const [qfWinners, setQfWinners] = useState<string[] | null>(null);
@@ -41,6 +53,8 @@ export default function BracketPage() {
   ];
 
   // -------- Stage handlers --------
+
+  // Receives top2 + structured thirdPlace (team + group)
   const handleGroupAdvance = (selected: GroupAdvancePayload) => {
     setGroupSelections(selected);
     setStage('ro16');
@@ -67,7 +81,13 @@ export default function BracketPage() {
     alert(`🏆 Champion of AFCON 2025: ${winner}`);
   };
 
-  // -------- Build bracket data safely --------
+  // -------- Build bracket data --------
+
+  /**
+   * RO16 matches are now CAF-correct and depend on:
+   * - group winners / runners-up
+   * - third-place teams WITH group metadata
+   */
   const ro16Matches = groupSelections
     ? generateRO16Matches(groupSelections.top2, groupSelections.thirdPlace)
     : [];
@@ -97,7 +117,6 @@ export default function BracketPage() {
 
   // -------- Render --------
   return (
-    // Ensure stage is valid for VotesProviderWrapper
     <VotesProviderWrapper
       stage={
         stage === 'ro16' || stage === 'qf' || stage === 'sf' || stage === 'final'
@@ -110,7 +129,6 @@ export default function BracketPage() {
           AFCON 2025 Bracket Predictor
         </h1>
 
-        {/* Render current stage */}
         {stage === 'group' && (
           <GroupStage groups={groups} onAdvance={handleGroupAdvance} />
         )}
@@ -135,16 +153,9 @@ export default function BracketPage() {
           <Final finalists={sfWinners} onAdvance={handleFinalChampion} />
         )}
 
-        {/* Show bracket (always pass finalMatch teams, and the champion separately) */}
         {showBracketNow && (
           <div style={{ marginTop: '3rem' }}>
-            <h2
-              style={{
-                textAlign: 'center',
-                marginBottom: '1.5rem',
-                fontWeight: 600,
-              }}
-            >
+            <h2 style={{ textAlign: 'center', marginBottom: '1.5rem', fontWeight: 600 }}>
               Tournament Bracket
             </h2>
 
