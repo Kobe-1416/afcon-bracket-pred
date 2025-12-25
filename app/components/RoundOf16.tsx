@@ -51,23 +51,23 @@ export function generateRO16Matches(
 
   // Mapping for which third-placed group fills R1, R3, R5, R6 for each 4-group combination.
   // Keys are sorted group letters (e.g. 'ABCD'), values are [R1, R3, R5, R6] group letters.
-  const comboToSlots: Record<string, string[]> = {
-    ABCD: ['C', 'D', 'A', 'B'],
-    ABCE: ['C', 'A', 'B', 'E'],
-    ABCF: ['C', 'A', 'B', 'F'],
-    ABDE: ['D', 'A', 'B', 'E'],
-    ABDF: ['D', 'A', 'B', 'F'],
-    ABEF: ['E', 'A', 'B', 'F'],
-    ACDE: ['C', 'D', 'A', 'E'],
-    ACDF: ['C', 'D', 'A', 'F'],
-    ACEF: ['C', 'A', 'F', 'E'],
-    ADEF: ['D', 'A', 'F', 'E'],
-    BCDE: ['C', 'D', 'B', 'E'],
-    BCDF: ['C', 'D', 'B', 'F'],
-    BCEF: ['E', 'C', 'B', 'F'],
-    BDEF: ['E', 'D', 'B', 'F'],
-    CDEF: ['C', 'D', 'F', 'E'],
-  };
+ const comboToSlots: Record<string, string[]> = {
+  ABCD: ['B','C','D','A'],
+  ABCE: ['E','C','A','B'],
+  ABCF: ['F','C','A','B'],
+  ABDE: ['E','D','A','B'],
+  ABDF: ['F','D','A','B'],
+  ABEF: ['F','E','A','B'],
+  ACDE: ['E','C','D','A'],
+  ACDF: ['F','C','D','A'],
+  ACEF: ['E','C','A','F'],
+  ADEF: ['E','D','A','F'],
+  BCDE: ['E','C','D','B'],
+  BCDF: ['F','C','D','B'],
+  BCEF: ['F','E','C','B'],
+  BDEF: ['F','E','D','B'],
+  CDEF: ['E','C','D','F'],
+};
 
   // Normalize groups provided by thirdPlace and form the lookup key
   const thirdGroups = thirdPlace.map(tp => tp.group.toUpperCase());
