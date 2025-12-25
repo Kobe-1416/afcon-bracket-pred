@@ -100,28 +100,28 @@ export function generateRO16Matches(
   // Matches that involve "3rd Group X" use the resolved third-place teams above.
   return [
     // R1: Winner Group D vs appropriate 3rd (slotGroups[0])
-    { id: 'R1', team1: winners['D'] ?? '', team2: r1Third },
+    { id: 'match 1', team1: winners['D'] ?? '', team2: r1Third },
 
     // R2: Runner-up Group A vs Runner-up Group C
-    { id: 'R2', team1: runners['A'] ?? '', team2: runners['C'] ?? '' },
+    { id: 'match 2', team1: runners['A'] ?? '', team2: runners['C'] ?? '' },
 
     // R3: Winner Group A vs appropriate 3rd (slotGroups[1])
-    { id: 'R3', team1: winners['A'] ?? '', team2: r3Third },
+    { id: 'match 3', team1: winners['A'] ?? '', team2: r3Third },
 
     // R4: Runner-up Group B vs Runner-up Group F
-    { id: 'R4', team1: runners['B'] ?? '', team2: runners['F'] ?? '' },
+    { id: 'match 4', team1: runners['B'] ?? '', team2: runners['F'] ?? '' },
 
     // R5: Winner Group B vs appropriate 3rd (slotGroups[2])
-    { id: 'R5', team1: winners['B'] ?? '', team2: r5Third },
+    { id: 'match 5', team1: winners['B'] ?? '', team2: r5Third },
 
     // R6: Winner Group C vs appropriate 3rd (slotGroups[3])
-    { id: 'R6', team1: winners['C'] ?? '', team2: r6Third },
+    { id: 'match 6', team1: winners['C'] ?? '', team2: r6Third },
 
     // R7: Winner Group E vs Runner-up Group D
-    { id: 'R7', team1: winners['E'] ?? '', team2: runners['D'] ?? '' },
+    { id: 'match 7', team1: winners['E'] ?? '', team2: runners['D'] ?? '' },
 
     // R8: Winner Group F vs Runner-up Group E
-    { id: 'R8', team1: winners['F'] ?? '', team2: runners['E'] ?? '' },
+    { id: 'match 8', team1: winners['F'] ?? '', team2: runners['E'] ?? '' },
   ];
 }
 
